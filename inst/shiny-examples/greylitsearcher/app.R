@@ -19,7 +19,8 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                               column(10,
                                      h2('GreyLitSearcher'),
                                      br(),
-                                     'Welcome to GreyLitSearcher, a web-based tool for performing systematic and transparent searches of organisational websites.'
+                                     'Welcome to GreyLitSearcher, a web-based tool for performing systematic and transparent searches of organisational websites.',
+                                     shinybusy::add_busy_spinner(spin = "fading-circle", color = "#bababa", margins = c(70, 20))
                                      )
                               )
                           ),
@@ -43,7 +44,6 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                                      ),
                               column(5,
                                      splitLayout(
-                                         #actionButton("google", "Google", class = "btn-primary"),
                                                  actionButton("google", "Google", class = "btn-primary")
                                                  )
                                      ),
@@ -65,7 +65,6 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                                      br(),
                                      br(),
                                      textOutput('save_report')
-                                     #downloadButton('download_files', 'Download saved files as .zip',icon = icon("file-download"))
                                      )
                           )
                  ),
@@ -75,7 +74,6 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                               column(10,
                                      h2('Scrape data from the downloaded search results'),
                                      br(),
-                                     add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                                      'Now, we can scrape search results based on patterns in the HTML code.',
                                      hr(),
                                      actionButton("scrape_HTMLs", "Scrape the results HTMLs"),
@@ -83,8 +81,9 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                                      br(),
                                      textOutput('scrape_report'),
                                      br(),
-                                     dataTableOutput('data')
-                                     #downloadButton('download_files', 'Download saved files as .zip',icon = icon("file-download"))
+                                     dataTableOutput('data'),
+                                     br(),
+                                     downloadButton('downloadData', 'Download results as CSV', icon = icon("file-download"))
                               )
                           )
                  )
@@ -127,7 +126,7 @@ server <- function(input, output) {
     observeEvent(input$download_HTMLs, {
         htmls <- list()
         for(i in 1:length(rv$links[,4])){
-            html <- save_html((rv$links[,4])[i], pause = 3, backoff = FALSE)
+            html <- save_html((rv$links[,4])[i], pause = 0.5, backoff = FALSE)
             htmls <- c(htmls, html)
         }
         rv$htmls <- htmls
@@ -156,6 +155,15 @@ server <- function(input, output) {
         output$save_report <- renderText({
             paste0('A total of ', nrow(rv$data),' search results have been exported and are shown in the table below.')
         })
+
+        output$downloadData <- downloadHandler(
+            filename = function() {
+                paste("results.csv", sep = "")
+            },
+            content = function(file) {
+                write.csv(rv$data, file, row.names = FALSE)
+            })
+
     })
 
 }

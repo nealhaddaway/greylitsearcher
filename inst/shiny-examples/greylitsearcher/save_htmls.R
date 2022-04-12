@@ -18,7 +18,7 @@
 #' for clarity. Files are saved to the working directory. A pause notification is printed to the
 #' console.
 #' @export
-save_html <- function(url, path = '', pause = 2, backoff = TRUE){
+save_html <- function(url, path = '', pause = 0.5, backoff = TRUE){
   t0 <- Sys.time()
 
   pause <- pause * runif(1, 0.5, 1.5)
@@ -73,7 +73,7 @@ save_html <- function(url, path = '', pause = 2, backoff = TRUE){
 #' @export
 save_htmls <- function(urls,
                        path = '',
-                       pause = 4,
+                       pause = 0.5,
                        backoff = FALSE){
   t0 <- Sys.time()
   #htmls <- as.list(mapply(save_html,
@@ -83,7 +83,7 @@ save_htmls <- function(urls,
   #                backoff))
   htmls <- list()
   for(i in 1:length(urls)){
-    html <- save_html(urls[i], pause = 3, backoff = FALSE)
+    html <- save_html(urls[i], pause = 0.5, backoff = FALSE)
     htmls <- c(htmls, html)
   }
   t1 <- Sys.time()

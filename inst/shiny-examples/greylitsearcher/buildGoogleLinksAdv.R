@@ -297,7 +297,7 @@ buildGoogleLinksAdv <- function(sites = '',
       'Number of pages exported: 1'
     } else {
       paste('Number of pages exported: ',
-            pages * length(sites),
+            pages * length(trimws(unlist(strsplit(sites, "\n")))),
             sep = '')
     },
     sep = '\n')

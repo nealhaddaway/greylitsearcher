@@ -1,4 +1,4 @@
-# greylitsearcher <img src="inst/extdata/hex.png" align="right" width="15%"/>
+# greylitsearcher <img src="inst/shiny-examples/www/hex.png" align="right" width="15%"/>
 
 <img src="inst/extdata/home.png" align="right" width="50%"/>
 greylitsearcher is a web-based tool for performing systematic and transparent searches of organisational websites. It does so by using the 'site:' token in a traditional Google search, returning only those results found across that site domain.  

@@ -9,6 +9,7 @@ library(dplyr)
 library(shinyjs)
 
 source('buildLinks_google.R')
+source('buildGoogleLinksAdv.R')
 source('save_htmls.R')
 source('scrape_google.R')
 
@@ -21,7 +22,7 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                                      h2('greylitsearcher'),
                                      br(),
                                      'Welcome to greylitsearcher, a web-based tool for performing systematic and transparent searches of organisational websites.',
-                                     #shinybusy::add_busy_spinner(spin = "fading-circle", color = "#bababa", margins = c(70, 20))
+                                     shinybusy::add_busy_spinner(spin = "fading-circle", color = "#bababa", margins = c(70, 20)),
                                      br(),
                                      br(),
                                      'You can use this tool to perform structured and transparent searches of websites using Google\'s sitesearch functionality.',
@@ -55,26 +56,56 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                           fluidRow(
                               column(10,
                                      h2('Build and check your searches'),
+                                     shinybusy::add_busy_spinner(spin = "fading-circle", color = "#bababa", margins = c(70, 20)),
                                      br(),
                                      'Use this tab to build and check your searches.',
                                      br(),
                                      hr(),
                                      'Enter the websites you wish to search:',
                                      br(),br(),
-                                     textAreaInput('websites', 'Website URLs to search (each on a new line)', placeholder = 'www.sei.org'),
-                                     textAreaInput('search', 'Words to search (separated by a space)', placeholder = 'climate sea level'),
-                                     textInput('pages', 'Number of pages of results', placeholder = 10),
-                                     hr(),
-                                     'Select your search engine:',
-                                     br(),br()
+                                     textAreaInput('websites', 'Website URLs to search (each on a new line)', placeholder = 'www.sei.org')),
+                              column(7,
+                                     div(
+                                         style = "background-color:#f5f5f5;",
+                                         p(style="color: #666; font-family: Arial,sans-serif; text-overflow: ellipsis; flex: 1 1 auto; font-size: 18px; text-align: center; padding-top: 10px; padding-bottom: 10px;",
+                                           'Advanced search')),
+                                     p(style = 'text-align: left;',
+                                       strong('Find articles'),br(),
+                                       tags$table(width = "100%",
+                                                  tags$tr(width = "100%",
+                                                          tags$td(width = "40%", 'with ', strong('all'), ' of the words'),
+                                                          tags$td(width = "60%", textInput('and_terms', NULL, width =  "100%"))
+                                                  ),
+                                                  tags$tr(width = "100%",
+                                                          tags$td(width = "40%", 'with the ', strong('exact phrase')),
+                                                          tags$td(width = "60%", textInput('exact_phrase', NULL, width =  "100%"))
+                                                  ),
+                                                  tags$tr(width = "100%",
+                                                          tags$td(width = "40%", 'with ', strong('at least one'), 'of the words'),
+                                                          tags$td(width = "60%", textInput('or_terms', NULL, width =  "100%"))
+                                                  ),
+                                                  tags$tr(width = "100%",
+                                                          tags$td(width = "40%", strong('without'), ' the words'),
+                                                          tags$td(width = "60%", textInput('not_terms', NULL, width =  "100%"))
+                                                  ),
+                                                  tags$tr(width = "100%",
+                                                          tags$td(width = "40%", 'return records ', strong('dated'), ' between'),
+                                                          tags$td(width = "60%",
+                                                                  splitLayout(textInput('date_from', NULL, width =  "100%", placeholder = "YYYY-MM-DD"), p(style = 'text-align: center;',' - '),
+                                                                              textInput('date_to', NULL, width =  "100%", placeholder = "YYYY-MM-DD"),
+                                                                              cellWidths = c('45%', '5%', '45%')))
+                                                  ),
+                                                  tags$tr(width = "100%",
+                                                          tags$td(width = "40%", 'pages of results'),
+                                                          tags$td(width = "60%", numericInput('pages', NULL, width =  "100%", value = 1, max = 100, step = 1))
+                                                  )
+                                                  ),
+                                       br(),
+                                       actionButton("google", "Build search links", icon("search"), class = 'btn-primary')
                                      ),
-                              column(5,
-                                     splitLayout(
-                                                 actionButton("google", "Google", class = "btn-primary")
-                                                 )
                                      ),
                               column(12,
-                                     br(),
+                                     hr(),
                                      uiOutput('preview_table')
                                      )
                           )
@@ -84,6 +115,7 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                           fluidRow(
                               column(10,
                                      h2('Download your search results as HTML files'),
+                                     shinybusy::add_busy_spinner(spin = "fading-circle", color = "#bababa", margins = c(70, 20)),
                                      br(),
                                      'Here, You can save each page of search results for scraping in the next step.',
                                      hr(),
@@ -106,6 +138,7 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                           fluidRow(
                               column(10,
                                      h2('Scrape data from the downloaded search results'),
+                                     shinybusy::add_busy_spinner(spin = "fading-circle", color = "#bababa", margins = c(70, 20)),
                                      br(),
                                      'Now, we can scrape search results based on patterns in the HTML code.',
                                      hr(),
@@ -116,7 +149,11 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                                          br(),
                                          conditionalPanel(
                                              condition='input.scrape_HTMLs!=null && input.scrape_HTMLs!=""',
-                                             downloadButton('downloadData', 'Download results as CSV', icon = icon("file-download")))
+                                             downloadButton('downloadData', 'Download results as CSV', icon = icon("file-download")),
+                                             br(),
+                                             br(),
+                                             downloadButton('downloadReport', 'Download search report', icon = icon('file-download'))
+                                             )
                                          ),
                                      br(),
                                      br(),
@@ -137,18 +174,23 @@ server <- function(input, output) {
     #on pressing google, generate preview
     observeEvent(input$google, {
 
-        if (any(identical(input$websites, ''), identical(input$search, ''), identical(input$pages, ''))==TRUE){
+        if (identical(input$websites, '')==TRUE){
         } else {
 
-            rv$sites <- input$websites
-            rv$search <- input$search
             rv$pages <- as.numeric(input$pages)
 
-            rv$links <- buildLinks_google(rv$search,
-                                          rv$sites,
-                                          rv$pages)
+            rv$link <- buildGoogleLinksAdv(
+                     site = input$websites,
+                     and_terms = input$and_terms,
+                     exact_phrase = input$exact_phrase,
+                     or_terms = input$or_terms,
+                     not_terms = input$not_terms,
+                     date_from = input$date_from,
+                     date_to = input$date_to,
+                     pages = input$pages)
 
-            rv$links <- cbind(rv$links, link_num=paste0('link', seq(1, nrow(rv$links), 1)))
+            rv$links <- cbind(rv$link$link, link_num=paste0('link', seq(1, nrow(rv$link$link), 1)))
+            rv$report <- rv$link$report
 
             #show preview of links
             output$preview <- renderDataTable({
@@ -158,7 +200,8 @@ server <- function(input, output) {
             #render preview UI
             output$preview_table <- renderUI({
                 tagList(
-                    "If you're happy with these links, proceed to the 'Results' tab to see your search results",
+                    "If you're happy with these links, proceed to the 'Save HTMLs' tab to save your search results pages",
+                    br(),
                     br(),
                     dataTableOutput('preview')
                 )
@@ -170,61 +213,66 @@ server <- function(input, output) {
     #prepare HTML files for scraping
     observeEvent(input$download_HTMLs, {
 
-        if (any(identical(input$websites, ''), identical(input$search, ''), identical(input$pages, ''))==TRUE){
-        } else {
-            withCallingHandlers({
-                shinyjs::html("text", "")
+        withCallingHandlers({
+            shinyjs::html("text", "")
 
-                htmls <- list()
-                for(i in 1:length(rv$links[,4])){
-                    html <- save_html((rv$links[,4])[i], pause = 0.5, backoff = FALSE)
-                    htmls <- c(htmls, html)
-                }
-                rv$htmls <- htmls
-                print(paste0(length(rv$htmls), ' files downloaded.'))
+            htmls <- list()
+            for(i in 1:length(rv$links$link)){
+                html <- save_html(rv$links$link[i], pause = 0.5, backoff = FALSE)
+                htmls <- c(htmls, html)
+            }
+            rv$htmls <- htmls
 
-            },
-            message = function(m) {
-                shinyjs::html(id = "text", html = m$message, add = TRUE)})
+        },
+        message = function(m) {
+            shinyjs::html(id = "text", html = m$message, add = TRUE)})
 
-            output$save_report <- renderText({
-                paste0(length(rv$htmls),' pages of results successfully downloaded. Proceed to the "Scrape data" tab to extract search results and download the final dataset.')
-            })
-        }
+        output$save_report <- renderText({
+            paste0(length(rv$htmls),' pages of results successfully downloaded. Proceed to the "Scrape data" tab to extract search results and download the final dataset.')
+        })
+
     })
 
     #scrape HTML files
     observeEvent(input$scrape_HTMLs, {
 
-        if (any(identical(input$websites, ''), identical(input$search, ''), identical(input$pages, ''))==TRUE){
-        } else {
-
-            df <- data.frame()
-            for(i in 1:length(rv$htmls)){
-                data <- get_info(unlist(rv$htmls[i]))
-                print(data)
-                df <- dplyr::bind_rows(df, data)
-            }
-            df <- df[!duplicated(df), ]
-            rv$data <- df
-
-            output$data <- renderDataTable({
-                rv$data
-            })
-
-            output$save_report <- renderText({
-                paste0('A total of ', nrow(rv$data),' search results have been exported and are shown in the table below.')
-            })
-
-            output$downloadData <- downloadHandler(
-                filename = function() {
-                    paste("results.csv", sep = "")
-                },
-                content = function(file) {
-                    write.csv(rv$data, file, row.names = FALSE)}
-                )
-
+        #loop through downloaded htmls and extract data
+        df <- data.frame()
+        for(i in 1:length(rv$htmls)){
+            data <- get_info(unlist(rv$htmls[i]))
+            df <- dplyr::bind_rows(df, data)
         }
+        df <- df[!duplicated(df), ]
+        rv$data <- df
+
+        #render data table
+        output$data <- renderDataTable({
+            rv$data
+        })
+
+        #visual report text
+        output$scrape_report <- renderText({
+            paste0('A total of ', nrow(rv$data),' search results have been exported and are shown in the table below (you may see than 10 results per page if Google adverts took their place).')
+        })
+
+        #build download handler for CSV data
+        output$downloadData <- downloadHandler(
+            filename = function() {
+                paste("results.csv", sep = "")
+            },
+            content = function(file) {
+                write.csv(rv$data, file, row.names = FALSE)}
+        )
+
+        #build download hanlder for report text file
+        output$downloadReport <- downloadHandler(
+            filename = function() {
+                paste("search_record.txt", sep = "")
+            },
+            content = function(file) {
+                writeLines(rv$report, file)}
+        )
+
     })
 
 }

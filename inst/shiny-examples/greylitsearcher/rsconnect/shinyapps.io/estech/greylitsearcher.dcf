@@ -5,7 +5,7 @@ account: estech
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6062911
-bundleId: 5790292
+bundleId: 5806509
 url: https://estech.shinyapps.io/greylitsearcher/
-when: 1649769843.99756
-lastSyncTime: 1649769843.99757
+when: 1650187053.06439
+lastSyncTime: 1650187053.0644

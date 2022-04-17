@@ -67,6 +67,7 @@ get_descriptions <- function(code_lines){
   y <- grep("ZINbbc luh4tb xpd O9g5cc uUPGi", code_lines) #find location of lines containing 'result-title js-result-title' tag
   descriptions <- code_lines[y+12] #extract lines
   descriptions <- gsub("<.*?>", "", sub(".*AP7Wnd\">", "", descriptions))
+  descriptions <- gsub("</", "", descriptions)
   return(descriptions)
 }
 
@@ -84,7 +85,9 @@ get_descriptions <- function(code_lines){
 get_links <- function(code_lines){
   y <- grep("ZINbbc luh4tb xpd O9g5cc uUPGi", code_lines) #find location of lines containing 'result-title js-result-title' tag
   links <- code_lines[y+1] #extract lines
-  links <- gsub('q=', '', gsub('\"><h3', '', stringr::str_extract(links, "q=\\s*(.*?)\\s*<h3")))
+  #links <- gsub('q=', '', gsub('\"><h3', '', stringr::str_extract(links, "q=\\s*(.*?)\\s*<h3")))
+  links <- sub("&amp;sa=.*", "", links)
+  links <- sub('.*q=', '', links)
   return(links)
 }
 

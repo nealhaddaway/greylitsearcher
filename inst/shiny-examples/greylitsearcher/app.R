@@ -31,13 +31,13 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                                      'To get started, enter your websites and search terms in the "Search" tab. Next, download the pages of search results in the "Save HTMLs" tab. Finally, scrape the downloaded files in the "Scrape data" tab. You can then download a CSV file containing your search results (source, title, URL and description).',
                                      br(),
                                      br(),
+                                     tags$img(src="buildGooglelinks.png", width = 700),
+                                     br(),
+                                     br(),
                                      'Please note that websites much be indexed by Google.com for the site: operator to work in greylitsearcher. ', tags$a(href="https://developers.google.com/search/docs/advanced/debug/search-operators/all-search-site", "Read more here."),
                                      br(),
                                      br(),
                                      'Be aware that repetitive searching may result in a temporary block from Google (your table of search results will be blank). Please use this tool responsibly.',
-                                     br(),
-                                     br(),
-                                     'At present, terms can only be combined additively (i.e. term1 AND term2). Capabilities will be expanded shortly. Thanks for your interest!',
                                      br(),
                                      br(),
                                      hr(),
@@ -189,12 +189,14 @@ server <- function(input, output) {
                      date_to = input$date_to,
                      pages = input$pages)
 
-            rv$links <- cbind(rv$link$link, link_num=paste0('link', seq(1, nrow(rv$link$link), 1)))
+            rv$links <- rv$link$link
             rv$report <- rv$link$report
 
             #show preview of links
             output$preview <- renderDataTable({
-                rv$links
+                table <- rv$links
+                table$link <- paste0("<a href='",table$link,"'>",table$link,"</a>")
+                table
             }, escape = FALSE)
 
             #render preview UI
@@ -247,8 +249,11 @@ server <- function(input, output) {
 
         #render data table
         output$data <- renderDataTable({
-            rv$data
-        })
+            table <- rv$data
+            table$link <- paste0("<a href='",table$link,"'>",table$link,"</a>")
+            table$source <- paste0("<a href='",table$source,"'>",table$source,"</a>")
+            table
+        }, escape = FALSE)
 
         #visual report text
         output$scrape_report <- renderText({

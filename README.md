@@ -19,10 +19,10 @@ Be aware that repetitive searching may result in a temporary block from Google (
 <img src="inst/extdata/links.png" width="50%" style="float: left; margin-right: 10px;"><br>  
 <br>
 2. Save the HTML code for each link  
-<img src="inst/extdata/saving.png" width="50%" style="float: left; margin-right: 10px;"><br>  
+<img src="inst/extdata/saving.png" width="60%" style="float: left; margin-right: 10px;"><br>  
 <br>
 3. Scrape the results from each page of results  
-<img src="inst/extdata/results.png" width="50%" style="float: left; margin-right: 10px;"><br>  
+<img src="inst/extdata/results.png" width="70%" style="float: left; margin-right: 10px;"><br>  
 <br>
 4. Download your search results and a text record of your search  
-<img src="inst/extdata/report.png" width="50%" style="float: left; margin-right: 10px;"><br>  
+<img src="inst/extdata/report.png" width="70%" style="float: left; margin-right: 10px;"><br>  

@@ -24,25 +24,24 @@ save_html <- function(url, path = '', pause = 0.5, backoff = TRUE){
   pause <- pause * runif(1, 0.5, 1.5)
 
   #initiate scrape and detect redirect
-  message('Saving search results...\n')
   html <- RCurl::getURL(url, followlocation=TRUE)
   names(html) <- url
 
   t1 <- Sys.time()
   response_delay <- round(as.numeric(t1-t0), 3)
   if(backoff == TRUE){
-    message(paste('Request took',
-                  round(response_delay, 3),
-                'seconds to perform. Waiting',
-                round(pause*response_delay, 3),
-                'seconds before next attempt.\n'))
+    #message(paste('Request took',
+    #              round(response_delay, 3),
+    #            'seconds to perform. Waiting',
+    #            round(pause*response_delay, 3),
+    #            'seconds before next attempt.\n'))
     Sys.sleep(pause*response_delay)
   } else {
-    message(paste('Request took',
-                  round(response_delay, 3),
-                'second(s) to perform. Waiting',
-                round(pause, 3),
-                'seconds before next attempt.\n'))
+    #message(paste('Request took',
+    #              round(response_delay, 3),
+    #            'second(s) to perform. Waiting',
+    #            round(pause, 3),
+    #            'seconds before next attempt.\n'))
     Sys.sleep(pause)
   }
 
@@ -84,7 +83,7 @@ save_htmls <- function(urls,
   #                backoff))
   htmls <- list()
   for(i in 1:length(urls)){
-    html <- save_html(urls[i], pause = 0.5, backoff = FALSE)
+    html <- save_html(urls[i], pause = pause, backoff = FALSE)
     htmls <- c(htmls, html)
   }
   t1 <- Sys.time()

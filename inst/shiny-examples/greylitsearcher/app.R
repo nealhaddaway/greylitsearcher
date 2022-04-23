@@ -118,6 +118,10 @@ ui <- navbarPage("greylitsearcher", id = "tabs",
                                      shinybusy::add_busy_spinner(spin = "fading-circle", color = "#bababa", margins = c(70, 20)),
                                      br(),
                                      'Here, You can save each page of search results for scraping in the next step.',
+                                     br(),
+                                     br(),
+                                     strong('Specify the delay in seconds between file saves'),' (this can reduce the chances of being blocked by Google)',br(),
+                                     numericInput('pause', NULL, value = 3, width = 75, step = 0.5),
                                      hr(),
                                      conditionalPanel(
                                          condition='input.google!=null && input.google!=""',
@@ -195,7 +199,7 @@ server <- function(input, output) {
             #show preview of links
             output$preview <- renderDataTable({
                 table <- rv$links
-                table$link <- paste0("<a href='",table$link,"'>",table$link,"</a>")
+                table$link <- paste0("<a href='",table$link,"' target='_blank'>",table$link,"</a>")
                 table
             }, escape = FALSE)
 
@@ -217,12 +221,35 @@ server <- function(input, output) {
 
         withCallingHandlers({
             shinyjs::html("text", "")
-
             htmls <- list()
+            message('Initialising...')
+            t0 <- Sys.time()
             for(i in 1:length(rv$links$link)){
-                html <- save_html(rv$links$link[i], pause = 0.5, backoff = FALSE)
+                message(paste0('Saving page ', i, '...'))
+                html <- save_html(rv$links$link[i], pause = input$pause, backoff = FALSE)
+                #if last html contains a CAPTCHA, pause
+                if(grepl('CAPTCHA', html)  == TRUE){
+                    showModal(modalDialog(
+                        title = "You've been blocked ☹",
+                        'It looks like Google has temporarily blocked you. Please navigate to Google to solve the CAPTCHA.',
+                        br(),
+                        br(),
+                        'Pausing for 2 minutes...',
+                        easyClose = TRUE,
+                        footer = NULL
+                    ))
+                    rv$captcha <- TRUE
+                    Sys.sleep(120)
+                }
+
                 htmls <- c(htmls, html)
+                message(paste0('Page ', i, ' saved.'))
             }
+            t1 <- Sys.time()
+            response_delay <- round(as.numeric(t1-t0), 3)
+            message(paste('Completed in',
+                          round(response_delay, 3),
+                          'seconds.'))
             rv$htmls <- htmls
 
         },
@@ -250,8 +277,8 @@ server <- function(input, output) {
         #render data table
         output$data <- renderDataTable({
             table <- rv$data
-            table$link <- paste0("<a href='",table$link,"'>",table$link,"</a>")
-            table$source <- paste0("<a href='",table$source,"'>",table$source,"</a>")
+            table$link <- paste0("<a href='",table$link,"' target='_blank'>",table$link,"</a>")
+            table$source <- paste0("<a href='",table$source,"' target='_blank'>",table$source,"</a>")
             table
         }, escape = FALSE)
 

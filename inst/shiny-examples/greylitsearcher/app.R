@@ -13,8 +13,12 @@ source('buildGoogleLinksAdv.R')
 source('save_htmls.R')
 source('scrape_google.R')
 
+
 # Define UI for application that draws a histogram
 ui <- navbarPage("greylitsearcher", id = "tabs",
+
+                 #Google Analytics tag
+                 tags$head(includeHTML("google-analytics.html")),
 
                  tabPanel("Home",
                           fluidRow(
